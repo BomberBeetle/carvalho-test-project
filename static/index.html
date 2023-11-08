@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Amazon Scraper</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">    
+        <script
+			  src="https://code.jquery.com/jquery-3.7.1.min.js"
+			  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+			  crossorigin="anonymous"></script>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+        <style>
+            .card-width{
+                width: 10rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+
+        <div class="row"> 
+
+        <div class="col text-center">
+        <h1>Amazon Scraper</h1>
+        <h2>Search term: </h2>
+        <input class="form-control" id="search-box" type="text"/> <button class="btn btn-primary btn-lg" id="search-button">Go</button>
+
+        <div id="results" class="row text-center">
+
+        </div>
+
+        </div>
+        </div>
+
+        </div>
+
+        <div style="display: none;" id="search-result-card-template" class="col">
+            <div class="card card-width">
+            <img name="prod-img" class="card-img-top"/>
+            <div class="card-body">
+                <b class="card-title" name="prod-name">Product Name</b>
+                <p class="card-text"><span name="prod-rating"></span> stars</p>
+                <p class="card-text"><span name="prod-reviews"></span> reviews</p>
+            </div>
+            </div>
+        </div>
+
+        <div id="search-loading-template" style="display: none;"> 
+            Loading...
+        </div>
+
+        <div id="seach-error-template" style="display: none;">
+            There was an error fetching results. Please try again later.
+        </div>
+
+        <script>
+
+            $("#search-button").on("click", ()=>{
+                const keyword = encodeURIComponent($("#search-box").val()) //escape uri characters in search box
+                $("#results").empty() //empty the results div
+                $("#search-loading-template").clone().removeAttr("style").appendTo("#results") //clone the loading result template into results div
+                fetch(`http://localhost:1337/app/scrape/?keyword=${keyword}`).then((res)=>{
+                    res.json().then((prods)=>{
+                        $("#results").empty()
+                        prods.forEach((prod)=>{
+                            const card = $("#search-result-card-template").clone().removeAttr("style")
+                            card.find("[name='prod-img']").attr("src", prod["image_url"]) 
+                            card.find("[name='prod-name']").text(prod["title"])
+                            card.find("[name='prod-reviews']").text(prod["reviews"])
+                            card.find("[name='prod-rating']").text(prod["stars"]) 
+                            card.appendTo("#results")
+                        })
+                    })
+                    .catch((err)=>{
+                        console.log("JSON error");
+                        console.log(err);
+                        $("#results").empty()
+                        $("#search-error-template").clone().removeAttr("style").appendTo("#results")
+                    })
+                })
+                .catch((err)=>{
+                    console.log("Error fetching data");
+                    console.log(err);
+                    $("#results").empty()
+                    $("#search-error-template").clone().removeAttr("style").appendTo("#results")
+                })
+            })
+        </script>
+    </body>
+</html>
